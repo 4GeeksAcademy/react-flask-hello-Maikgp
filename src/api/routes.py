@@ -20,3 +20,36 @@ def handle_hello():
     }
 
     return jsonify(response_body), 200
+
+@api.route('/signup', methods=['POST'])
+def signup():
+    response_body = {}
+    data = request.json
+    user = User( email = data.get('email'),
+                 password = data.get('password'),
+                 is_active = True,
+                 )
+    user_exist = db.session.execute(db.select(User).where(User.email == user.email)).scalar()
+    if user_exist:
+        return jsonify({"message": "Usuario existente"}), 401
+    db.session.add(user)
+    db.session.commit()
+    response_body['results'] = user.serialize()
+    response_body['message'] = "Usuario creado"
+    access_token = create_access_token(identity=[user.email, True])
+    response_body['access_token'] = access_token
+    return response_body, 200
+
+
+
+
+@api.route('/login', methods=["POST"])
+def login():
+    response_body = {}
+    email = request.json.get("email", None)
+    password = request.json.get("password", None)
+    user = db.session.execute(db.select(User).where(User.email == email, User.password == password)).scalar()
+    if not user:
+        return jsonify({"message": "Bad email or password"}), 400
+    access_token = create_access_token(identity=[email, True])
+    return jsonify(access_token=access_token)
