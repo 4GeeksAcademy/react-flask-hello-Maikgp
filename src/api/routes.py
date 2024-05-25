@@ -1,70 +1,85 @@
+"""
+This module takes care of starting the API Server, Loading the DB and Adding the endpoints
+"""
 from flask import Flask, request, jsonify, url_for, Blueprint
-from api.models import db, User
+from api.models import db, User 
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
 from flask_jwt_extended import create_access_token
-from flask_jwt_extended import get_jwt_identity
-from flask_jwt_extended import jwt_required
+
 
 
 api = Blueprint('api', __name__)
-CORS(api)  # Allow CORS requests to this API
+
+# Allow CORS requests to this API
+CORS(api)
 
 
-@api.route('/hello', methods=['POST', 'GET'])
+@api.route('/hello', methods=['GET'])
 def handle_hello():
-    response_body = {"message": "Hello! I'm a message that came from the backend, check the network tab on the google inspector and you will see the GET request"}
+
+    response_body = {
+        "message": "Hello! I'm a message that came from the backend, check the network tab on the google inspector and you will see the GET request"
+    }
+
     return jsonify(response_body), 200
 
+#----ENDPOINT PARA  REGISTRAR UN USUARIO-----
 
 @api.route('/signup', methods=['POST'])
-def signup():
-    response_body = {}
-    data = request.json
-    user = User( email = data.get('email'),
-                 password = data.get('password'),
-                 is_active = True,
-                 )
-    user_exist = db.session.execute(db.select(User).where(User.email == user.email)).scalar()
-    if user_exist:
-        return jsonify({"message": "Usuario existente"}), 401
-    db.session.add(user)
+def register_User():
+
+    data = request.get_json()
+    print(data);
+    name = data["name"]
+    email = data["email"]
+    password = data["password"]
+    
+    new_user = User(name =name, email=email, password=password)
+    db.session.add(new_user)
     db.session.commit()
-    response_body['results'] = user.serialize()
-    response_body['message'] = "Usuario creado"
-    access_token = create_access_token(identity=[user.email, True])
-    response_body['access_token'] = access_token
-    return response_body, 200
 
+    response_body = {
+        "user": {
+            "id": new_user.id,
+            "name": new_user.name,
+            "email": new_user.email,
+            
+        },
+        "msg": "El usuario se registró exitosamente"
+    }
+    return jsonify(response_body), 200 
 
-@api.route('/login', methods=["POST"])
+#---- Log de usuario--
+
+@api.route('/login', methods=['POST'])
 def login():
-    response_body = {}
-    email = request.json.get("email", None)
-    password = request.json.get("password", None)
-    user = db.session.execute(db.select(User).where(User.email == email, User.password == password)).scalar()
-    if not user:
-        return jsonify({"message": "Bad email or password"}), 401
-    access_token = create_access_token(identity=[email, True])
-    return jsonify(access_token=access_token)
+    datos_login = request.json
+    email = datos_login.get('email')
+    password = datos_login.get('password')
+
+   
+    usuario = User.query.filter_by(email=email).first()
+
+    if usuario and usuario.password == password:
+        access_token = create_access_token(identity=usuario.id)
+        return jsonify({"token": access_token}), 200
+    else:
+        return jsonify({'mensaje': 'Credenciales inválidas'}), 401
 
 
-@api.route('/private', methods=["GET"])
-@jwt_required()
-def protected():
-    # Access the identity of the current user with get_jwt_identity
-    current_user = get_jwt_identity()
-    return jsonify(logged_in_as=current_user), 200
 
+@api.route('/wipeall', methods=['GET'])
+def database_wipe():
+    try:
+        db.reflect()
+        db.drop_all()
+        db.session.commit()
+    except Exception as e:
+        return "mec", 500
+    return "This is ok MotherF*%&$", 200
 
-@api.route('/profile', methods=["GET"])
-@jwt_required()
-def profile():
-    # Access the identity of the current user with get_jwt_identity
-    current_user = get_jwt_identity()
-    if not current_user:
-        return jsonify({"message": "Access denied"}), 401
-    response_body = {}
-    response_body["message"] = "Perfil del usuario"
-    response_body["results"] = current_user
-    return response_body, 200
+# this only runs if `$ python src/app.py` is executed
+if __name__ == '__main__':
+    PORT = int(os.environ.get('PORT', 3000))
+    api.run(host='0.0.0.0', port=PORT, debug=False)

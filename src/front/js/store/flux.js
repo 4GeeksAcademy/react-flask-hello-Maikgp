@@ -1,74 +1,92 @@
 const getState = ({ getStore, getActions, setStore }) => {
 	return {
 		store: {
-			message: null,
-			demo: [
-				{
-					title: "FIRST",
-					background: "white",
-					initial: "white"
-				},
-				{
-					title: "SECOND",
-					background: "white",
-					initial: "white"
-				}
-			]
+			isLoggedIn: false,
+
 		},
 		actions: {
-			login: (token) =>{
-				if (!token){
-					setStore({isLoggedIn: false})
-				} else {
-					setStore({isLoggedIn: true});
-					localStorage.setItem("token", token);
-				}
-			},
-			logout: () =>{
-				setStore({isLoggedIn: false});
-				localStorage.removeItem("token")
-			},
-			isLogged: () => {
-				if (localStorage.getItem("token")){
-					setStore({isLoggedIn: true})
-				} 
-				else {
-					setStore({isLoggedIn: false})
-				}
-			},
-
+			// Use getActions to call a function within a fuction
 			exampleFunction: () => {
 				getActions().changeColor(0, "green");
 			},
 
 			getMessage: async () => {
-				try{
+				try {
 					// fetching data from the backend
 					const resp = await fetch(process.env.BACKEND_URL + "/api/hello")
 					const data = await resp.json()
 					setStore({ message: data.message })
 					// don't forget to return something, that is how the async resolves
 					return data;
-				}catch(error){
+				} catch (error) {
 					console.log("Error loading message from backend", error)
 				}
 			},
-			changeColor: (index, color) => {
-				//get the store
-				const store = getStore();
 
-				//we have to loop the entire demo array to look for the respective index
-				//and change its color
-				const demo = store.demo.map((elm, i) => {
-					if (i === index) elm.background = color;
-					return elm;
-				});
+			/* --------- De aqui en adelante van las funciones de flux  */
 
-				//reset the global store
-				setStore({ demo: demo });
+			setLogin: () => {
+				setStore({ isLoggedIn: true })
+			},
+			setLogout: () => {
+				setStore({ isLoggedIn: false })
+				localStorage.removeItem('token');
+
+			},
+
+			register_User: (name, email, password) => {
+				fetch(`${process.env.BACKEND_URL}/api/signup`, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({
+						"name": name,
+						"email": email,
+						"password": password,
+					}),
+				})
+					.then(Response => Response.json())
+					.then(data => {
+						console.log(data);
+
+					})
+					.catch(error => console.log('Error parcero', error))
+
+			},
+
+			/* --------- FUNCION FLUX (fetch) PARA LOGIN----------- */
+			login: async (email, password) => {
+				await fetch(`${process.env.BACKEND_URL}/api/login`, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({ email, password })
+				})
+					.then(response => {
+						if (!response.ok) {
+							throw new Error(Error);
+						}
+						return response.json();
+					})
+					.then(data => {
+						console.log('Login exitoso:', data);
+
+						localStorage.setItem('token', data.token);
+
+						getActions().setLogin();
+						return data;
+
+					})
+					.catch(error => {
+						console.error('Error durante el login:', error);
+						throw error;
+					});
 			}
 		}
 	};
 };
+
 
 export default getState;

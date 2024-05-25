@@ -1,0 +1,62 @@
+@import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css");
+
+
+.contenido{
+    display: flex;
+    flex-direction: column;
+    background-color: #2C2F36;
+    border-radius: 10px;
+    width: 33%;
+    height: 100%;
+    margin-left: 33%;
+}
+header{
+    max-height: 100px;
+}
+.headercontent{
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    color: white;
+    text-align: center;
+    align-content:center;
+    margin-top: 30px;
+
+}
+
+.headercontent h3{
+    font-size: 40px;
+
+}
+.headercontent h6{
+    font-size: 12px;
+    
+}
+.linea-divisoria {
+    border-top: 1px solid rgb(245, 245, 245); 
+    margin-top: 10px;
+    margin-bottom:10px;
+    margin-left: 20%;
+    width: 60%;
+}
+.inputs{
+    width: fit-content;
+    background-color:rgb(82,89,102);
+    color:white;
+}
+.inputs::placeholder {
+    color: #ffffff; 
+    opacity: 0.9; 
+}
+.bi{
+    color: rgb(25,135,84);
+}
+.fluid-check{
+    text-align: center;
+    color:white;
+}
+.boton{
+    width: auto;
+}
+.boton .btn{
+    margin-left: 40%;
+    margin-bottom: 10px;
+}
