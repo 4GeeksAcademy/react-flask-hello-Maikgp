@@ -24,7 +24,7 @@ def handle_hello():
 
     return jsonify(response_body), 200
 
-#----ENDPOINT PARA  REGISTRAR UN USUARIO-----
+
 
 @api.route('/signup', methods=['POST'])
 def register_User():
@@ -50,7 +50,7 @@ def register_User():
     }
     return jsonify(response_body), 200 
 
-#---- Log de usuario--
+
 
 @api.route('/login', methods=['POST'])
 def login():
@@ -65,7 +65,7 @@ def login():
         access_token = create_access_token(identity=usuario.id)
         return jsonify({"token": access_token}), 200
     else:
-        return jsonify({'mensaje': 'Credenciales inválidas'}), 401
+        return jsonify({'mensaje': 'no funciona el token'}), 401
 
 
 
@@ -77,7 +77,7 @@ def database_wipe():
         db.session.commit()
     except Exception as e:
         return "mec", 500
-    return "This is ok MotherF*%&$", 200
+    return "Ok", 200
 
 # this only runs if `$ python src/app.py` is executed
 if __name__ == '__main__':
